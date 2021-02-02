@@ -29,14 +29,12 @@ object PosFoldOverPricers {
       (remainingQuantityAfterUnitPrice, unitPriceAmount)
     }
 
-    var total = BigDecimal(0)
-
-    val (remainingQuantityAfterTierPrice, tierPriceAmount) = priceByTier(quantity)
-    total = total + tierPriceAmount
-
-    val (remainingQuantityAfterUnitPrice, unitPriceAmount) = priceByUnit(remainingQuantityAfterTierPrice)
-    total = total + unitPriceAmount
-
+    val pricers = List(priceByTier, priceByUnit)
+    val (_, total) = pricers.foldLeft((quantity, BigDecimal(0))) {
+      case ((quantity, total), pricer) =>
+        val (remainingQuantity, amount) = pricer(quantity)
+        (remainingQuantity, total + amount)
+    }
     total
   }
 }
