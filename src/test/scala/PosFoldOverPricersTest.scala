@@ -13,12 +13,16 @@ object PosFoldOverPricers {
     }
 
   private def total(quantity: Int, tierPrice: TierPrice, unitPrice: UnitPrice) = {
+    val priceByTier: Int => (Int, BigDecimal) = { quantity =>
+      val tiers = quantity / tierPrice.quantity
+      val tierPriceAmount = tiers * tierPrice.price
+      val remainingQuantityAfterTierPrice = quantity % tierPrice.quantity
+      (remainingQuantityAfterTierPrice, tierPriceAmount)
+    }
+
     var total = BigDecimal(0)
 
-    val tiers = quantity / tierPrice.quantity
-    val tierPriceAmount = tiers * tierPrice.price
-    val remainingQuantityAfterTierPrice = quantity % tierPrice.quantity
-
+    val (remainingQuantityAfterTierPrice, tierPriceAmount) = priceByTier(quantity)
     total = total + tierPriceAmount
 
     val unitPriceAmount =  remainingQuantityAfterTierPrice * unitPrice.price
