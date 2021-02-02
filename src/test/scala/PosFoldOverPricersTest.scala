@@ -7,13 +7,16 @@ object PosFoldOverPricers {
 
   case class TierPrice(price: BigDecimal, quantity: Int)
 
-  def total(pricings: List[Pricing]): BigDecimal =
+  type Quantity = Int
+  type Amount = BigDecimal
+
+  def total(pricings: List[Pricing]): Amount =
     pricings.foldLeft(BigDecimal(0)) { (grandTotal, pricing) =>
       grandTotal + total(pricing.quantity, pricing.tierPrice, pricing.unitPrice)
     }
 
-  private def total(quantity: Int, tierPrice: TierPrice, unitPrice: UnitPrice) = {
-    val priceByTier: Int => (Int, BigDecimal) = { quantity =>
+  private def total(quantity: Quantity, tierPrice: TierPrice, unitPrice: UnitPrice): Amount = {
+    val priceByTier: Quantity => (Quantity, Amount) = { quantity =>
       val tiers = quantity / tierPrice.quantity
       val tierPriceAmount = tiers * tierPrice.price
       val remainingQuantityAfterTierPrice = quantity % tierPrice.quantity
