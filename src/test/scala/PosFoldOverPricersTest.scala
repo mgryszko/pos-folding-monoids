@@ -1,25 +1,11 @@
 import org.scalatest.funsuite.AnyFunSuite
 
 object PosFoldOverPricers {
-  case class Pricing(quantity: Int, unitPrice: UnitPrice, tierPrice: TierPrice)
-
-  case class UnitPrice(price: BigDecimal)
-
-  case class TierPrice(price: BigDecimal, quantity: Int)
-
   type Quantity = Int
   type Amount = BigDecimal
   type Pricer = Quantity => (Quantity, Amount)
 
-  def total(pricings: List[Pricing]): Amount = {
-    val pricersByArticle = pricings.map(pricing => (pricing.quantity, List(
-      priceByTier(pricing.tierPrice.quantity, pricing.tierPrice.price),
-      priceByUnit(pricing.unitPrice.price)
-    )))
-    totalBis(pricersByArticle)
-  }
-
-  def totalBis(pricings: List[(Quantity, List[Pricer])]): Amount = {
+  def total(pricings: List[(Quantity, List[Pricer])]): Amount = {
     pricings.foldLeft(BigDecimal(0)) { case (grandTotal, (quantity, pricers)) =>
       grandTotal + total(quantity, pricers)
     }
@@ -47,10 +33,10 @@ object PosFoldOverPricers {
 class PosFoldOverPricersTest extends AnyFunSuite {
   import PosFoldOverPricers._
 
-  val croissantUnitPrice = UnitPrice(BigDecimal("1.10"))
-  val croissantTierPrice = TierPrice(BigDecimal("2.65"), 3)
-  val baguetteUnitPrice = UnitPrice(BigDecimal("0.75"))
-  val baguetteTierPrice = TierPrice(BigDecimal("3.00"), 5)
+  val croissantUnitPrice = priceByUnit(BigDecimal("1.10"))
+  val croissantTierPrice = priceByTier(3, BigDecimal("2.65"))
+  val baguetteUnitPrice = priceByUnit(BigDecimal("0.75"))
+  val baguetteTierPrice = priceByTier(5, BigDecimal("3.00"))
 
   test("one croissant") {
     assert(total(List(1.croissants)) == BigDecimal("1.10"))
@@ -93,7 +79,7 @@ class PosFoldOverPricersTest extends AnyFunSuite {
   }
 
   implicit class PricingOps(quantity: Int) {
-    val croissants = Pricing(quantity, croissantUnitPrice, croissantTierPrice)
-    val baguettes = Pricing(quantity, baguetteUnitPrice, baguetteTierPrice)
+    val croissants = (quantity, List(croissantTierPrice, croissantUnitPrice))
+    val baguettes = (quantity, List(baguetteTierPrice, baguetteUnitPrice))
   }
 }
