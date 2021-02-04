@@ -11,14 +11,14 @@ object PosFoldOverPricers {
   type Amount = BigDecimal
   type Pricer = Quantity => (Quantity, Amount)
 
-  def total(pricings: List[Pricing]): Amount =
-    pricings.foldLeft(BigDecimal(0)) { (grandTotal, pricing) =>
-      val pricers = List(
-        priceByTier(pricing.tierPrice.quantity, pricing.tierPrice.price),
-        priceByUnit(pricing.unitPrice.price)
-      )
-      grandTotal + total(pricing.quantity, pricers)
+  def total(pricings: List[Pricing]): Amount = {
+    pricings.map(pricing => (pricing.quantity, List(
+      priceByTier(pricing.tierPrice.quantity, pricing.tierPrice.price),
+      priceByUnit(pricing.unitPrice.price)
+    ))).foldLeft(BigDecimal(0)) { case (grandTotal, (quantity, pricers)) =>
+      grandTotal + total(quantity, pricers)
     }
+  }
 
   val priceByTier: (Quantity, Amount) => Pricer = { (quantityPerTier, tierPrice) => { quantity =>
     val tiers = quantity / quantityPerTier
