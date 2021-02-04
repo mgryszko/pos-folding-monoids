@@ -16,21 +16,21 @@ object PosFoldOverPricers {
       grandTotal + total(pricing.quantity, pricing.tierPrice, pricing.unitPrice)
     }
 
+  val priceByTier: (Quantity, Amount) => Pricer = { (quantityPerTier, tierPrice) => { quantity =>
+    val tiers = quantity / quantityPerTier
+    val tierPriceAmount = tiers * tierPrice
+    val remainingQuantityAfterTierPrice = quantity % quantityPerTier
+    (remainingQuantityAfterTierPrice, tierPriceAmount)
+  } }
+
+  val priceByUnit: Amount => Pricer = { unitPrice => { quantity =>
+    val unitPriceAmount = quantity * unitPrice
+    val remainingQuantityAfterUnitPrice = 0
+    (remainingQuantityAfterUnitPrice, unitPriceAmount)
+  } }
+
   private def total(quantity: Quantity, tierPrice: TierPrice, unitPrice: UnitPrice): Amount = {
-    val priceByTier: Pricer = { quantity =>
-      val tiers = quantity / tierPrice.quantity
-      val tierPriceAmount = tiers * tierPrice.price
-      val remainingQuantityAfterTierPrice = quantity % tierPrice.quantity
-      (remainingQuantityAfterTierPrice, tierPriceAmount)
-    }
-
-    val priceByUnit: Pricer = { quantity =>
-      val unitPriceAmount = quantity * unitPrice.price
-      val remainingQuantityAfterUnitPrice = 0
-      (remainingQuantityAfterUnitPrice, unitPriceAmount)
-    }
-
-    val pricers = List(priceByTier, priceByUnit)
+    val pricers = List(priceByTier(tierPrice.quantity, tierPrice.price), priceByUnit(unitPrice.price))
     val (_, total) = pricers.foldLeft((quantity, BigDecimal(0))) {
       case ((quantity, total), pricer) =>
         val (remainingQuantity, amount) = pricer(quantity)
