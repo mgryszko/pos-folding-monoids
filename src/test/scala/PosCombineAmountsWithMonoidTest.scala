@@ -1,5 +1,6 @@
 import cats.kernel.Monoid
 import cats.syntax.monoid._
+import org.javamoney.moneta.FastMoney
 import org.scalatest.funsuite.AnyFunSuite
 
 object PosCombineAmountsWithMonoid {
@@ -83,5 +84,34 @@ class PosCombineAmountsWithMonoidTest extends AnyFunSuite {
     val croissants = (quantity, List(croissantTierPrice, croissantUnitPrice))
     val baguettes = (quantity, List(baguetteTierPrice, baguetteUnitPrice))
   }
+}
 
+class FastMoneyMonoidTest extends AnyFunSuite {
+  implicit def monoidInstanceForFastMoney: Monoid[FastMoney] = new Monoid[FastMoney] {
+    override def empty: FastMoney = FastMoney.of(0, "EUR")
+
+    override def combine(x: FastMoney, y: FastMoney): FastMoney = x add y
+  }
+
+  implicit class IntToFastMoneyConversions(amount: Int) {
+    val eur: FastMoney = FastMoney.of(amount, "EUR")
+  }
+
+  val (x, y, z) = (1.eur, 2.eur, 3.eur)
+
+  test("zero") {
+    assert(Monoid[FastMoney].empty == 0.eur)
+  }
+
+  test("associativity") {
+    assert(((x |+| y) |+| z) == (x |+| (y |+| z)))
+  }
+
+  test("left identity") {
+    assert((Monoid.empty |+| x) == x)
+  }
+
+  test("right identity") {
+    assert((x |+| Monoid.empty) == x)
+  }
 }
