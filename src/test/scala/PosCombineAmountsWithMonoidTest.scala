@@ -35,49 +35,59 @@ object PosCombineAmountsWithMonoid {
 class PosCombineAmountsWithMonoidTest extends AnyFunSuite {
   import PosCombineAmountsWithMonoid._
 
-  val croissantUnitPrice = priceByUnit(BigDecimal("1.10"))
-  val croissantTierPrice = priceByTier(3, BigDecimal("2.65"))
-  val baguetteUnitPrice = priceByUnit(BigDecimal("0.75"))
-  val baguetteTierPrice = priceByTier(5, BigDecimal("3.00"))
+  implicit def monoidInstanceForFastMoney: Monoid[FastMoney] = new Monoid[FastMoney] {
+    override def empty: FastMoney = FastMoney.of(0, "EUR")
+
+    override def combine(x: FastMoney, y: FastMoney): FastMoney = x add y
+  }
+
+  implicit class StringToFastMoneyConversions(amount: String) {
+    val eur: FastMoney = FastMoney.of(BigDecimal(amount), "EUR")
+  }
+
+  val croissantUnitPrice = priceByUnit("1.10".eur)
+  val croissantTierPrice = priceByTier(3, "2.65".eur)
+  val baguetteUnitPrice = priceByUnit("0.75".eur)
+  val baguetteTierPrice = priceByTier(5, "3.00".eur)
 
   test("one croissant") {
-    assert(total(List(1.croissants)) == BigDecimal("1.10"))
+    assert(total(List(1.croissants)) == "1.10".eur)
   }
 
   test("two croissants") {
-    assert(total(List(2.croissants)) == BigDecimal("2.20"))
+    assert(total(List(2.croissants)) == "2.20".eur)
   }
 
   test("one croissant, one baguette") {
-    assert(total(List(1.croissants, 1.baguettes)) == BigDecimal("1.85"))
+    assert(total(List(1.croissants, 1.baguettes)) == "1.85".eur)
   }
 
   test("two croissants, two baguettes") {
-    assert(total(List(2.croissants, 2.baguettes)) == BigDecimal("3.70"))
+    assert(total(List(2.croissants, 2.baguettes)) == "3.70".eur)
   }
 
   test("three croissants") {
-    assert(total(List(3.croissants)) == BigDecimal("2.65"))
+    assert(total(List(3.croissants)) == "2.65".eur)
   }
 
   test("four croissants") {
-    assert(total(List(4.croissants)) == BigDecimal("3.75"))
+    assert(total(List(4.croissants)) == "3.75".eur)
   }
 
   test("five croissants") {
-    assert(total(List(5.croissants)) == BigDecimal("4.85"))
+    assert(total(List(5.croissants)) == "4.85".eur)
   }
 
   test("six croissants") {
-    assert(total(List(6.croissants)) == BigDecimal("5.30"))
+    assert(total(List(6.croissants)) == "5.30".eur)
   }
 
   test("three croissants, four baguettes") {
-    assert(total(List(3.croissants, 4.baguettes)) == BigDecimal("5.65"))
+    assert(total(List(3.croissants, 4.baguettes)) == "5.65".eur)
   }
 
   test("three croissants, five baguettes") {
-    assert(total(List(3.croissants, 5.baguettes)) == BigDecimal("5.65"))
+    assert(total(List(3.croissants, 5.baguettes)) == "5.65".eur)
   }
 
   implicit class PricingOps(quantity: Int) {
