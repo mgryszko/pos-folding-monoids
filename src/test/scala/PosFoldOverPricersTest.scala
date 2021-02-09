@@ -22,15 +22,11 @@ object PosFoldOverPricers {
 
   val priceByTier: (Quantity, Amount) => Pricer = { (quantityPerTier, tierPrice) => { quantity =>
     val tiers = quantity / quantityPerTier
-    val tierPriceAmount = tiers * tierPrice
-    val remainingQuantityAfterTierPrice = quantity % quantityPerTier
-    (remainingQuantityAfterTierPrice, tierPriceAmount)
+    (quantity % quantityPerTier, tiers * tierPrice)
   } }
 
   val priceByUnit: Amount => Pricer = { unitPrice => { quantity =>
-    val unitPriceAmount = quantity * unitPrice
-    val remainingQuantityAfterUnitPrice = 0
-    (remainingQuantityAfterUnitPrice, unitPriceAmount)
+    (0, quantity * unitPrice)
   } }
 
   private def total(quantity: Quantity, pricers: List[Pricer])  = {
